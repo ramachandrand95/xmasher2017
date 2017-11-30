@@ -1,0 +1,55 @@
+/**
+ * Definitions 
+ */
+#define TRANSMISSION_RATE 1000 //transmission rate in bits/sec
+/*
+ * Pin declarations
+ */
+#define RX_PIN 2 //only pins 2 and 3 can trigger interrupts
+#define TX_PIN 3
+#define LED_IDLE 13
+#define LED_BUSY 12
+#define LED_COLL 11
+/*
+ * State Definitions for the channel monitor
+ */
+enum CHANNEL_MON_STATES {MON_BUSY, MON_IDLE, MON_COLL}; //idle is already defined somewhere else, so I just did this
+enum CHANNEL_MON_STATES monitor_state;
+/*
+ * Other monitor definitions
+ */
+#define MON_BUS_IDLE_TIME 8.01
+#define MON_COL_DET_TIME 0.52
+void setup() {
+  MON_setStateIdle();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
+
+void channelMon(){
+
+}
+
+void MON_setStateIdle(){
+  //Set State to IDLE
+  monitor_state = MON_IDLE;
+  //set interrupt on RX_PIN on a rising edge
+  attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_LOW_TO_HIGH, RISING);
+}
+
+/**
+ * ISR for the RX pin going low to high
+ */
+void MON_RX_LOW_TO_HIGH(){
+    //set interrupt on RX_PIN from high to low
+    //schedule timer interrupt to occur 0.6ms
+  
+}
+
+void MON_setBusy(){
+  monitor_state = MON_BUSY;
+}
+
