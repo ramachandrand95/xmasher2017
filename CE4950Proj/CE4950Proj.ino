@@ -31,6 +31,10 @@ void setup() {
     monitor_state = MON_IDLE;
     //set interrupt on RX_PIN on a rising edge
     attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_LOW_TO_HIGH, RISING);
+    //setup LED out pins
+    pinMode(LED_IDLE, OUTPUT);
+    pinMode(LED_BUSY, OUTPUT);
+    pinMode(LED_COLL, OUTPUT);
 }
 
 void loop() {
