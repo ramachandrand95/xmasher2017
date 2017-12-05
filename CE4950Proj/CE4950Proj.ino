@@ -73,11 +73,16 @@ void MON_RX_HIGH_TO_LOW(){
     setTimer(MON_BUS_TIME_TO_IDLE);
 }
 
-
+/**
+ * Sets the timer to a specified time
+ */
 void setTimer(float millisec){
     timer.attachInterrupt(timerISR, millisec*1000); //library uses us not ms
 }
 
+/**
+ * Timer ISR, fires off when timer expires
+ */
 void timerISR(){
     if(digitalRead(RX_PIN) == HIGH){
       monitor_state = MON_COLL;
@@ -90,6 +95,9 @@ void timerISR(){
     
 }
 
+/**
+ * Sets the LED indicator
+ */
 void setLED(int led){
      digitalWrite(led, HIGH);
      Serial.println(led);
