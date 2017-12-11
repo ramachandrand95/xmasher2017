@@ -20,17 +20,16 @@ enum CHANNEL_MON_STATES monitor_state;
 /*
  * Other monitor definitions
  */
-#define MON_BUS_TIME_TO_IDLE 8.01
+#define MON_BUS_TIME_TO_IDLE 8.3
 #define MON_BUS_COL_DET_TIME 0.52
 TimerOne timer;
-
+float timerTime = 0.0;
 void setup() {
     Serial.begin(250000);
     Serial.println("Connected to node");
     timer.initialize();
     //Set State to IDLE
     monitor_state = MON_IDLE;
-    Serial.println("LINE IDLE");
     setLED(LED_IDLE);
     //set interrupt on RX_PIN on a rising edge
     attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_LOW_TO_HIGH, RISING);
@@ -40,6 +39,7 @@ void setup() {
     pinMode(LED_IDLE, OUTPUT);
     pinMode(LED_BUSY, OUTPUT);
     pinMode(LED_COLL, OUTPUT);
+    interrupts();
 }
 
 void loop() {
@@ -51,48 +51,56 @@ void loop() {
  * ISR for the RX pin going low to high
  */
 void MON_RX_LOW_TO_HIGH(){
-    //set busy state
-    monitor_state = MON_BUSY;
-    setLED(LED_BUSY);
     //set interrupt on RX_PIN from high to low
     attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_HIGH_TO_LOW, FALLING);
     //schedule timer interrupt to occur 0.6ms
     setTimer(MON_BUS_COL_DET_TIME);
+    //set busy state
+    monitor_state = MON_BUSY;
+    setLED(LED_BUSY);
 }
 
 /**
  * ISR for the RX pin going high to low
  */
 void MON_RX_HIGH_TO_LOW(){
-    //set busy state
-    monitor_state = MON_BUSY;
-    setLED(LED_BUSY);
     //set interrupt on RX_PIN from low to high
     attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_LOW_TO_HIGH, RISING);
     //schedule timer interrupt to occur 7.7ms
     setTimer(MON_BUS_TIME_TO_IDLE);
+    //set busy state
+    monitor_state = MON_BUSY;
+    setLED(LED_BUSY);
 }
 
 /**
  * Sets the timer to a specified time
  */
-void setTimer(float millisec){
-    timer.attachInterrupt(timerISR, millisec*1000); //library uses us not ms
+void setTimer(double millisec){
+    timerTime = millisec;
+    timer.attachInterrupt(timerISR, millisec*1000.0); //library uses us not ms
 }
 
 /**
  * Timer ISR, fires off when timer expires
  */
 void timerISR(){
+  if(timerTime == MON_BUS_COL_DET_TIME){
     if(digitalRead(RX_PIN) == HIGH){
       monitor_state = MON_COLL;
       setLED(LED_COLL);
-
-    }else{
+      attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_LOW_TO_HIGH, RISING);
+      setTimer(MON_BUS_TIME_TO_IDLE);
+    }
+  }
+  if(timerTime == MON_BUS_TIME_TO_IDLE){
+    if(digitalRead(RX_PIN) == LOW){
       monitor_state = MON_IDLE;
       setLED(LED_IDLE);
+      attachInterrupt(digitalPinToInterrupt(RX_PIN), MON_RX_HIGH_TO_LOW, FALLING);
+      setTimer(MON_BUS_COL_DET_TIME);
     }
-    
+   }
 }
 
 /**
@@ -100,8 +108,7 @@ void timerISR(){
  */
 void setLED(int led){
      digitalWrite(led, HIGH);
-     Serial.println(led);
-
+     
      if(led != LED_IDLE){
         digitalWrite(LED_IDLE, LOW);
      }
